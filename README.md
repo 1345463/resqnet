@@ -4,6 +4,7 @@
 
 > 2026 Qoder 高校创造力大赛 · Hack4Good 技术向善 参赛项目
 > 在线演示：https://resqnet-t2bci1hjbry.qoder.zone
+> 管理端（真实台账/事件/网关）：https://resqnet-console-t2bci1hjbry.qoder.zone
 > 当前版本：**v0.1.0**（协议仿真 + 指挥台）
 
 ## 这是什么
@@ -61,13 +62,21 @@ npm run build    # 产物在 app/dist
 ## 目录
 
 ```
-app/                  前端（Vite + React + TS），比赛交付物
-  src/core/           协议内核与仿真引擎
-  src/components/     地图、节点、日志、发送器
+app/                  演示版（协议仿真 + 态势台）
+console/              管理端（真实台账 / 事件 / 消息 / 网关接入）
+firmware/gateway/     ESP32 LoRa 网关固件（LoRa ↔ WebSocket ↔ BLE）
+tools/gw-sim/         网关模拟器（无硬件联调）
 tools/                npm 镜像重写代理
-docs/                 可行性论证、协议规范、迭代计划
+docs/                 可行性论证、协议规范、无线电方案、迭代计划
 参赛清单.md           比赛提交 checklist
 ```
+
+## 真实链路
+
+- 固件说明：[firmware/gateway/README.md](firmware/gateway/README.md)（ESP32-S3 + SX1262，433 MHz 小功率）
+- 管理端连网关：设置 → `ws://<网关IP>:81/`
+- 无硬件联调：`node tools/gw-sim/server.mjs`，管理端连 `ws://127.0.0.1:8081/`
+- 公网 HTTPS 版管理端无法连接局域网 `ws://`（浏览器混合内容限制），现场请用本地管理端
 
 ## 版本与迭代
 
@@ -79,11 +88,11 @@ docs/                 可行性论证、协议规范、迭代计划
 | `develop` | 下一版本集成 |
 | `feature/*` | 单功能开发，PR 合入 develop |
 
-- 每个版本必须更新 [CHANGELOG](CHANGELOG.md)，并打 tag（`v0.1.0` …）
+- 每个版本必须更新 [CHANGELOG](CHANGELOG.md)，并在 `release/vX.Y.Z` 分支冻结
 - 提交信息使用约定式：`feat:` / `fix:` / `docs:` / `refactor:` / `chore:`
 - 发布前跑 `npm run build`，并更新在线演示
 
-路线图与验收标准见 [迭代计划](docs/02-迭代计划.md)。
+路线图与验收标准见 [ROADMAP.md](ROADMAP.md)。
 
 ## 合规声明
 
@@ -93,5 +102,6 @@ docs/                 可行性论证、协议规范、迭代计划
 
 - [可行性论证与总体架构](docs/00-可行性论证与总体架构.md)
 - [协议规范 v0.1](docs/01-协议规范-v0.1.md)
-- [迭代计划](docs/02-迭代计划.md)
+- [无线电链路方案](docs/03-无线电链路方案.md)
+- [作品帖初稿](docs/05-作品帖初稿.md)
 - [CHANGELOG](CHANGELOG.md)
