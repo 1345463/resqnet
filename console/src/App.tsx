@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useConsoleStore } from './core/store';
 import { useGateway, type GatewayStatus } from './core/gateway';
+import { useSerial } from './core/serial';
 import { MapView, type FocusTarget } from './components/MapView';
 import { NodePanel } from './components/NodePanel';
 import { IncidentPanel } from './components/IncidentPanel';
@@ -11,10 +12,10 @@ import type { Incident, ConsoleNode } from './core/types';
 type Tab = 'incidents' | 'messages' | 'settings';
 
 const GATEWAY_LABEL: Record<GatewayStatus, string> = {
-  off: '网关未启用',
-  connecting: '网关连接中',
-  online: '网关在线',
-  error: '网关异常',
+  off: '链路未连接',
+  connecting: '链路连接中',
+  online: '链路在线',
+  error: '链路异常',
 };
 
 export default function App() {
@@ -25,12 +26,25 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('incidents');
   const [clock, setClock] = useState(() => new Date());
 
-  const gateway = useGateway(settings, {
+  const gateway = useGateway(
+    settings,
+    {
+      onPosition: actions.upsertNode,
+      onText: actions.ingestText,
+      onSos: actions.ingestSos,
+      onOffline: actions.setNodeOffline,
+    },
+    settings.source === 'ws'
+  );
+
+  const serial = useSerial(settings, {
     onPosition: actions.upsertNode,
     onText: actions.ingestText,
     onSos: actions.ingestSos,
     onOffline: actions.setNodeOffline,
   });
+
+  const link = settings.source === 'serial' ? serial : gateway;
 
   useEffect(() => {
     const timer = window.setInterval(() => setClock(new Date()), 1000);
@@ -54,7 +68,7 @@ export default function App() {
   const sendTo = (to: string, text: string) => {
     const target = to === '*' ? null : nodes.find((n) => n.id === to) ?? null;
     const messageId = actions.createOutbound(to, target?.name ?? '全部节点', text);
-    const ok = gateway.send({ type: 'command', id: messageId, to, text, channel: settings.channel, ts: Date.now() });
+    const ok = link.send({ type: 'command', id: messageId, to, text, channel: settings.channel, ts: Date.now() });
     actions.setMessageStatus(messageId, ok ? 'sent' : 'failed');
   };
 
@@ -70,7 +84,7 @@ export default function App() {
         </div>
         <div className="topbar-meta">
           <span className="pill">{clock.toLocaleTimeString('zh-CN', { hour12: false })}</span>
-          <span className={`pill status-${gateway.status}`}>{GATEWAY_LABEL[gateway.status]}</span>
+          <span className={`pill status-${link.status}`}>{GATEWAY_LABEL[link.status]}</span>
           <span className={`pill ${settings.emergencyMode ? 'pill-warn' : ''}`}>
             {settings.emergencyMode ? '应急模式' : '常规模式'}
           </span>
@@ -162,16 +176,20 @@ export default function App() {
               nodes={nodes}
               messages={messages}
               selectedId={selectedId}
-              gatewayStatus={gateway.status}
+              gatewayStatus={link.status}
               onSend={sendTo}
             />
           )}
           {tab === 'settings' && (
             <SettingsPanel
               settings={settings}
-              gatewayStatus={gateway.status}
-              gatewayName={gateway.gatewayName}
-              gatewayError={gateway.lastError}
+              gatewayStatus={link.status}
+              gatewayName={settings.source === 'serial' ? 'USB 串口' : gateway.gatewayName}
+              gatewayError={link.lastError}
+              serialSupported={serial.supported}
+              serialConnected={serial.connected}
+              onSerialConnect={() => void serial.connect()}
+              onSerialDisconnect={() => void serial.disconnect()}
               onPatch={actions.patchSettings}
               onDemo={actions.loadDemo}
               onClear={actions.clearAll}

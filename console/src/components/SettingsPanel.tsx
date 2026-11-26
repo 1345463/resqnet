@@ -8,6 +8,10 @@ interface Props {
   gatewayStatus: GatewayStatus;
   gatewayName: string;
   gatewayError: string;
+  serialSupported: boolean;
+  serialConnected: boolean;
+  onSerialConnect: () => void;
+  onSerialDisconnect: () => void;
   onPatch: (patch: Partial<Settings>) => void;
   onDemo: () => void;
   onClear: () => void;
@@ -25,7 +29,7 @@ const ROLES: { value: Role; label: string }[] = [
   { value: 'gateway', label: '网关' },
 ];
 
-export function SettingsPanel({ settings, gatewayStatus, gatewayName, gatewayError, onPatch, onDemo, onClear, onExport, onImport, onAddNode }: Props) {
+export function SettingsPanel({ settings, gatewayStatus, gatewayName, gatewayError, serialSupported, serialConnected, onSerialConnect, onSerialDisconnect, onPatch, onDemo, onClear, onExport, onImport, onAddNode }: Props) {
   const [importText, setImportText] = useState('');
   const [name, setName] = useState('');
   const [callsign, setCallsign] = useState('');
@@ -43,16 +47,45 @@ export function SettingsPanel({ settings, gatewayStatus, gatewayName, gatewayErr
       </header>
 
       <div className="form-grid">
-        <label>网关 WebSocket 地址
-          <input value={settings.gatewayUrl} placeholder="ws://192.168.4.1:81/" onChange={(e) => onPatch({ gatewayUrl: e.target.value })} />
-        </label>
-        <label>接入令牌
-          <input value={settings.token} placeholder="可选，网关校验用" onChange={(e) => onPatch({ token: e.target.value })} />
-        </label>
-        <label>频道
-          <input value={settings.channel} onChange={(e) => onPatch({ channel: e.target.value })} />
+        <label>数据源
+          <select value={settings.source} onChange={(e) => onPatch({ source: e.target.value as Settings['source'] })}>
+            <option value="ws">WebSocket 网关</option>
+            <option value="serial">USB 串口（LoRa 模块）</option>
+          </select>
         </label>
       </div>
+
+      {settings.source === 'ws' ? (
+        <div className="form-grid">
+          <label>网关 WebSocket 地址
+            <input value={settings.gatewayUrl} placeholder="ws://192.168.4.1:81/" onChange={(e) => onPatch({ gatewayUrl: e.target.value })} />
+          </label>
+          <label>接入令牌
+            <input value={settings.token} placeholder="可选，网关校验用" onChange={(e) => onPatch({ token: e.target.value })} />
+          </label>
+          <label>频道
+            <input value={settings.channel} onChange={(e) => onPatch({ channel: e.target.value })} />
+          </label>
+        </div>
+      ) : (
+        <div className="serial-block">
+          <div className="form-grid">
+            <label>波特率
+              <input type="number" value={settings.serialBaud} onChange={(e) => onPatch({ serialBaud: Number(e.target.value) })} />
+            </label>
+            <label>状态
+              <input value={serialConnected ? '已连接' : serialSupported ? '可连接' : '当前环境不支持'} readOnly />
+            </label>
+          </div>
+          <div className="settings-actions">
+            <button type="button" onClick={onSerialConnect} disabled={!serialSupported || serialConnected}>连接串口</button>
+            <button type="button" onClick={onSerialDisconnect} disabled={!serialConnected}>断开</button>
+          </div>
+          <p className="muted">
+            需要 Chrome/Edge 或桌面端；连接时会在弹窗里选择串口设备（CP210x/CH340/ESP32 USB）。
+          </p>
+        </div>
+      )}
 
       <label className="switch-row">
         <input type="checkbox" checked={settings.emergencyMode} onChange={(e) => onPatch({ emergencyMode: e.target.checked })} />
@@ -120,7 +153,7 @@ export function SettingsPanel({ settings, gatewayStatus, gatewayName, gatewayErr
       <h3>网关接入协议</h3>
       <details className="protocol-help">
         <summary>查看 WebSocket 消息格式</summary>
-        <pre>{`连接：ws://<网关IP>:<端口>/
+        <pre>{`连接：ws://<网关IP>:<端口>/mesh
 鉴权：{"type":"auth","token":"...","channel":"cmd"}
 
 上行（网关→管理端）
