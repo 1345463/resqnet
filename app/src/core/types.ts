@@ -83,6 +83,14 @@ export interface Metrics {
   deliveryRate: number;
 }
 
+export interface VoiceJobView {
+  id: string;
+  srcName: string;
+  total: number;
+  done: number;
+  startedAt: number;
+}
+
 export interface Snapshot {
   nodes: SimNode[];
   links: Link[];
@@ -95,4 +103,5 @@ export interface Snapshot {
   online: number;
   ackCount: number;
   showRelay: boolean;
+  voices: VoiceJobView[];
 }

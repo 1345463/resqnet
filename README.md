@@ -92,11 +92,11 @@ docs/                 可行性论证、协议规范、无线电方案、迭代�
 | `develop` | 下一版本集成 |
 | `feature/*` | 单功能开发，PR 合入 develop |
 
-- 每个版本必须更新 [CHANGELOG](CHANGELOG.md)，并在 `release/vX.Y.Z` 分支冻结
+- 每个版本必须更新 [CHANGELOG](CHANGELOG.md)，并打 tag（`v0.1.0` …）
 - 提交信息使用约定式：`feat:` / `fix:` / `docs:` / `refactor:` / `chore:`
 - 发布前跑 `npm run build`，并更新在线演示
 
-路线图与验收标准见 [ROADMAP.md](ROADMAP.md)。
+路线图与验收标准见 [迭代计划](docs/02-迭代计划.md)。
 
 ## 合规声明
 
@@ -106,7 +106,5 @@ docs/                 可行性论证、协议规范、无线电方案、迭代�
 
 - [可行性论证与总体架构](docs/00-可行性论证与总体架构.md)
 - [协议规范 v0.1](docs/01-协议规范-v0.1.md)
-- [无线电链路方案](docs/03-无线电链路方案.md)
-- [使用说明](docs/06-使用说明.md)
-- [作品帖初稿](docs/05-作品帖初稿.md)
+- [迭代计划](docs/02-迭代计划.md)
 - [CHANGELOG](CHANGELOG.md)

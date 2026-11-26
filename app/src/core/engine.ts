@@ -1,4 +1,4 @@
-import type { EventKind, FeedEvent, InFlight, Link, Metrics, Packet, ScenarioKey, SimNode, Snapshot } from './types';
+import type { EventKind, FeedEvent, InFlight, Link, Metrics, Packet, ScenarioKey, SimNode, Snapshot, VoiceJobView } from './types';
 import { buildTerrain, distance, linkCost, LINK_THRESHOLD_DB, METERS_PER_UNIT, snrForLink } from './terrain';
 import { clampWorld, createScenario } from './scenarios';
 
@@ -27,8 +27,10 @@ export class MeshEngine {
   private posTimer = 0;
   private trailTimer = 0;
   private sosJobs: { sosId: string; nodeId: string; attempts: number; nextAt: number; acked: boolean }[] = [];
-  private voiceJobs = new Map<string, { total: number; done: Set<number>; url: string }>();
+  private voiceJobs = new Map<string, { srcName: string; total: number; done: Set<number>; url: string; startedAt: number }>();
   private deliveredSos = new Set<string>();
+  private prevRelay = new Map<string, string>();
+  private lastRelayLog = new Map<string, number>();
   private tally = { sent: 0, delivered: 0, hops: 0, latency: 0, received: 0 };
 
   constructor(scenario: ScenarioKey = 'urban') {
@@ -54,6 +56,8 @@ export class MeshEngine {
     this.sosJobs = [];
     this.voiceJobs = new Map();
     this.deliveredSos = new Set();
+    this.prevRelay = new Map();
+    this.lastRelayLog = new Map();
     this.tally = { sent: 0, delivered: 0, hops: 0, latency: 0, received: 0 };
     for (const node of this.nodes) {
       this.seen.set(node.id, new Set());
@@ -148,6 +152,23 @@ export class MeshEngine {
     }
     this.links = links;
     this.adjacency = adjacency;
+
+    if (this.clock > 2) {
+      for (const node of this.nodes) {
+        if (!node.online || node.role === 'phone') continue;
+        const relay = this.relayFor(node.id);
+        if (!relay) continue;
+        const prev = this.prevRelay.get(node.id);
+        if (prev && prev !== relay.id) {
+          const last = this.lastRelayLog.get(node.id) ?? -999;
+          if (this.clock - last > 8) {
+            this.lastRelayLog.set(node.id, this.clock);
+            this.log('info', `${node.name} 的主中继切换为 ${relay.name}（链路 ${relay.snr.toFixed(1)} dB）`);
+          }
+        }
+        this.prevRelay.set(node.id, relay.id);
+      }
+    }
   }
 
   private updateInFlight(dt: number): void {
@@ -359,7 +380,7 @@ export class MeshEngine {
     if (!node || !node.online) return;
     const voiceId = `v${this.seq++}`;
     const total = Math.max(2, Math.min(10, Math.ceil(duration / 0.4)));
-    this.voiceJobs.set(voiceId, { total, done: new Set(), url });
+    this.voiceJobs.set(voiceId, { srcName: node.name, total, done: new Set(), url, startedAt: this.clock });
     for (let i = 0; i < total; i += 1) {
       const packet: Packet = {
         id: `p${this.seq++}`,
@@ -444,6 +465,13 @@ export class MeshEngine {
   }
 
   getSnapshot(): Snapshot {
+    const voices: VoiceJobView[] = [...this.voiceJobs.entries()].map(([id, job]) => ({
+      id,
+      srcName: job.srcName,
+      total: job.total,
+      done: job.done.size,
+      startedAt: job.startedAt,
+    }));
     return {
       nodes: this.nodes.map((n) => ({ ...n, trail: [] })),
       links: this.links,
@@ -456,6 +484,7 @@ export class MeshEngine {
       online: this.nodes.filter((n) => n.online).length,
       ackCount: this.sosJobs.filter((j) => j.acked).length,
       showRelay: this.showRelay,
+      voices,
     };
   }
 }

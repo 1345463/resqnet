@@ -4,6 +4,7 @@ import { NodePanel } from './components/NodePanel';
 import { MessageFeed } from './components/MessageFeed';
 import { Composer } from './components/Composer';
 import { MetricsBar } from './components/MetricsBar';
+import { VoiceProgress } from './components/VoiceProgress';
 import { ScenarioBar } from './components/ScenarioBar';
 import type { ScenarioKey } from './core/types';
 
@@ -87,6 +88,7 @@ export default function App() {
 
         <aside className="col-right">
           <MetricsBar metrics={snap.metrics} ackCount={snap.ackCount} clock={snap.clock} />
+          <VoiceProgress voices={snap.voices} clock={snap.clock} />
           <MessageFeed events={snap.events} />
           <section className="panel guide">
             <h2>演示步骤</h2>

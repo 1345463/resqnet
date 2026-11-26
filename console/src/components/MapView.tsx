@@ -58,7 +58,7 @@ export function MapView({ nodes, incidents, center, zoom, selectedId, focus, onS
   const selectedRef = useRef(selectedId);
   const nodesRef = useRef(nodes);
   const incidentsRef = useRef(incidents);
-  const dragRef = useRef({ active: false, moved: false, lastX: 0, lastY: 0 });
+  const dragRef = useRef<{ active: boolean; moved: boolean; lastX: number; lastY: number }>({ active: false, moved: false, lastX: 0, lastY: 0 });
   const wheelTimer = useRef(0);
   const zoomFnRef = useRef<((delta: number) => void) | null>(null);
   const onViewChangeRef = useRef(onViewChange);
