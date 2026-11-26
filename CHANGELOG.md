@@ -9,8 +9,11 @@
 - 应急模式：登记呼号、报备编号、机构、频段、功率（条例第 37 条）
 - LoRa 网关固件（`firmware/gateway/`）：ESP32-S3 + SX1262，LoRa ↔ WebSocket ↔ BLE NUS，多跳转发
 - 网关模拟器（`tools/gw-sim/`）：无硬件联调
+- 电脑端（`desktop/`）：Electron 壳、本地加载管理台、Web Serial 串口权限、免安装 exe 打包脚本
+- 管理端 USB 串口数据源（Web Serial），与 WebSocket 共用同一套事件/消息模型
+- USB LoRa 桥固件（`firmware/usb-bridge/`）：LoRa ↔ 串口 JSON
 - 演示版：语音分片进度条、主中继切换日志、手机端地图比例修复
-- 文档：无线电链路方案、作品帖初稿、路线图
+- 文档：无线电链路方案、作品帖初稿、路线图、使用说明
 
 ### Changed
 - 演示版 `?auto=1` 自动演示；管理端 `?demo=1` 加载示例台账
