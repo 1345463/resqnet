@@ -40,8 +40,12 @@ export interface Message {
   ts: number;
 }
 
+export type LinkSource = 'ws' | 'serial';
+
 export interface Settings {
+  source: LinkSource;
   gatewayUrl: string;
+  serialBaud: number;
   token: string;
   channel: string;
   emergencyMode: boolean;
@@ -63,7 +67,9 @@ export interface ConsoleState {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  source: 'ws',
   gatewayUrl: '',
+  serialBaud: 115200,
   token: '',
   channel: 'cmd',
   emergencyMode: false,

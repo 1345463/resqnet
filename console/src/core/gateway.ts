@@ -11,7 +11,7 @@ export interface GatewayHandlers {
   onOffline: (nodeId: string) => void;
 }
 
-export function useGateway(settings: Settings, handlers: GatewayHandlers) {
+export function useGateway(settings: Settings, handlers: GatewayHandlers, enabled = true) {
   const [status, setStatus] = useState<GatewayStatus>('off');
   const [gatewayName, setGatewayName] = useState('');
   const [lastError, setLastError] = useState('');
@@ -21,7 +21,7 @@ export function useGateway(settings: Settings, handlers: GatewayHandlers) {
   handlersRef.current = handlers;
 
   useEffect(() => {
-    const url = settings.gatewayUrl.trim();
+    const url = enabled ? settings.gatewayUrl.trim() : '';
     if (!url) {
       setStatus('off');
       setGatewayName('');
@@ -95,7 +95,7 @@ export function useGateway(settings: Settings, handlers: GatewayHandlers) {
       socketRef.current = null;
       setStatus('off');
     };
-  }, [settings.gatewayUrl, settings.token, settings.channel]);
+  }, [enabled, settings.gatewayUrl, settings.token, settings.channel]);
 
   const send = useCallback((payload: Record<string, unknown>): boolean => {
     const socket = socketRef.current;
