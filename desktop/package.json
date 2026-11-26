@@ -1,0 +1,16 @@
+{
+  "name": "resqnet-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "应急通 ResQNet 电脑端（管理台 + USB LoRa 串口）",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build:ui": "cd ../console && npm run build",
+    "package": "node package-portable.mjs"
+  },
+  "devDependencies": {
+    "electron": "^33.4.0"
+  }
+}
