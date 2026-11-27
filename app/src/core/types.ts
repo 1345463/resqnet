@@ -4,6 +4,22 @@ export type RadioMode = 'lora' | 'halow' | 'ble';
 
 export type Channel = 'public' | 'team';
 
+export type TeamStatus = 'standby' | 'moving' | 'onsite';
+
+export interface RescueTeam {
+  id: string;
+  name: string;
+  members: number;
+  x: number;
+  y: number;
+  baseX: number;
+  baseY: number;
+  status: TeamStatus;
+  targetX?: number;
+  targetY?: number;
+  targetName?: string;
+}
+
 export type MsgType = 'SOS' | 'TEXT' | 'POS' | 'VOICE_CHUNK' | 'ACK';
 
 export type ScenarioKey = 'urban' | 'mountain' | 'disaster';
@@ -115,4 +131,6 @@ export interface Snapshot {
   queued: number;
   beidouAcks: number;
   beidouPending: number;
+  teams: RescueTeam[];
+  lastSos: { x: number; y: number; nodeName: string } | null;
 }

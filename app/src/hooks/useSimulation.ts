@@ -95,6 +95,14 @@ export function useSimulation() {
         engine.setPositionEnabled(enabled);
         setSnap(engine.getSnapshot());
       },
+      dispatchTeam: (id: string) => {
+        engine.dispatchTeam(id);
+        setSnap(engine.getSnapshot());
+      },
+      recallTeam: (id: string) => {
+        engine.recallTeam(id);
+        setSnap(engine.getSnapshot());
+      },
     }),
     [engine]
   );

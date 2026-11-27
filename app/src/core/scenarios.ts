@@ -1,4 +1,4 @@
-import type { Role, ScenarioKey, SimNode } from './types';
+import type { RescueTeam, Role, ScenarioKey, SimNode } from './types';
 import { buildTerrain, mulberry32, WORLD_H, WORLD_W } from './terrain';
 import type { Terrain } from './terrain';
 
@@ -129,4 +129,36 @@ export function clampWorld(node: SimNode): void {
   if (node.y < 20 || node.y > WORLD_H - 20) node.heading = -node.heading;
   node.x = Math.min(WORLD_W - 20, Math.max(20, node.x));
   node.y = Math.min(WORLD_H - 20, Math.max(20, node.y));
+}
+
+export function createTeams(key: ScenarioKey): RescueTeam[] {
+  const spots: Record<ScenarioKey, [number, number][]> = {
+    urban: [
+      [250, 640],
+      [850, 610],
+    ],
+    mountain: [
+      [120, 650],
+      [820, 600],
+    ],
+    disaster: [
+      [110, 660],
+      [870, 640],
+    ],
+  };
+  const names: Record<ScenarioKey, string[]> = {
+    urban: ['山鹰救援队', '蓝天救援队'],
+    mountain: ['山地搜救一队', '山地搜救二队'],
+    disaster: ['震区救援一队', '震区救援二队'],
+  };
+  return spots[key].map(([x, y], index) => ({
+    id: `team-${key}-${index + 1}`,
+    name: names[key][index],
+    members: index === 0 ? 6 : 4,
+    x,
+    y,
+    baseX: x,
+    baseY: y,
+    status: 'standby' as const,
+  }));
 }

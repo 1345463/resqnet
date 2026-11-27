@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSimulation } from './hooks/useSimulation';
 import { MapCanvas } from './components/MapCanvas';
 import { NodePanel } from './components/NodePanel';
+import { TeamPanel } from './components/TeamPanel';
 import { MessageFeed } from './components/MessageFeed';
 import { Composer } from './components/Composer';
 import { MetricsBar } from './components/MetricsBar';
@@ -101,6 +102,12 @@ export default function App() {
             onSelect={actions.select}
             onToggle={actions.toggleNode}
           />
+          <TeamPanel
+            teams={snap.teams}
+            lastSos={snap.lastSos}
+            onDispatch={actions.dispatchTeam}
+            onRecall={actions.recallTeam}
+          />
         </aside>
 
         <section className="col-main">
@@ -112,6 +119,7 @@ export default function App() {
               <span><i style={{ background: '#a78bfa' }} />无人机</span>
               <span><i style={{ background: '#fbbf24' }} />救援车</span>
               <span><i style={{ background: '#fb7185' }} />指挥车</span>
+              <span><i style={{ background: '#e2e8f0' }} />救援队</span>
             </div>
             <div className="map-hint">点击节点选择 · 外圈为电量 · 青色箭头为主中继</div>
           </div>
@@ -145,6 +153,7 @@ export default function App() {
               <li>发一条文字或语音，右侧日志会显示跳数与时延</li>
               <li>切「BLE」再选「近场-01」发消息：节点无外链会进入离线队列；切回 LoRa 自动补发</li>
               <li>点「北斗求救」：不依赖 Mesh，约 9 秒后收到卫星回执</li>
+              <li>发 SOS 后在左栏「救援队」点派出，看队伍向求救点移动并抵达</li>
             </ol>
             <details className="feature-list">
               <summary>演示端覆盖的功能</summary>
@@ -160,6 +169,7 @@ export default function App() {
                 <li>北斗三号短报文卫星求援与回执</li>
                 <li>近场实时语音（BLE/WiFi 直连，不走 Mesh）</li>
                 <li>应急模式：条例第 37 条临时设台登记</li>
+                <li>救援队：按距离显示，可派出/召回，地图上移动并抵达</li>
               </ul>
             </details>
             <p className="demo-status">链路 {snap.radio === 'halow' ? 'Wi-Fi HaLow' : snap.radio === 'ble' ? 'BLE 近场' : 'LoRa 433MHz'} · 离线队列 {snap.queued} 条 · 北斗回执 {snap.beidouAcks}</p>

@@ -256,6 +256,48 @@ export function MapCanvas({ engine, selectedId, onSelect }: Props) {
       }
     };
 
+    const drawTeams = () => {
+      const scale = toScreen(0, 0).scale;
+      for (const team of engine.teams) {
+        const s = toScreen(team.x, team.y);
+        if (team.status === 'moving' && team.targetX !== undefined && team.targetY !== undefined) {
+          const t = toScreen(team.targetX, team.targetY);
+          ctx.setLineDash([6, 6]);
+          ctx.strokeStyle = 'rgba(34, 211, 238, 0.55)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(s.x, s.y);
+          ctx.lineTo(t.x, t.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        const size = 10 * Math.max(0.85, Math.min(1.3, scale * 1.6));
+        ctx.beginPath();
+        ctx.rect(s.x - size, s.y - size, size * 2, size * 2);
+        ctx.fillStyle = team.status === 'onsite' ? '#34d399' : team.status === 'moving' ? '#22d3ee' : '#e2e8f0';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(8, 15, 26, 0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(8, 15, 26, 0.85)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(s.x - size * 0.45, s.y);
+        ctx.lineTo(s.x + size * 0.45, s.y);
+        ctx.moveTo(s.x, s.y - size * 0.45);
+        ctx.lineTo(s.x, s.y + size * 0.45);
+        ctx.stroke();
+        const label = `${team.name} · ${team.members}人`;
+        ctx.font = '10px "Noto Sans SC", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        const width = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(6, 12, 21, 0.7)';
+        ctx.fillRect(s.x - width / 2 - 2, s.y - size - 14, width + 4, 13);
+        ctx.fillStyle = team.status === 'onsite' ? '#86efac' : '#e2e8f0';
+        ctx.fillText(label, s.x, s.y - size - 4);
+      }
+    };
+
     const drawPackets = () => {
       for (const flight of engine.inFlight) {
         const a = engine.nodes.find((n) => n.id === flight.from);
@@ -286,6 +328,7 @@ export function MapCanvas({ engine, selectedId, onSelect }: Props) {
       drawRelay();
       drawTrails();
       drawNodes();
+      drawTeams();
       drawPackets();
       raf = requestAnimationFrame(draw);
     };

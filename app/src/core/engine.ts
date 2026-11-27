@@ -1,6 +1,6 @@
-import type { Channel, EventKind, FeedEvent, InFlight, Link, Metrics, Packet, RadioMode, ScenarioKey, SimNode, Snapshot, VoiceJobView } from './types';
+import type { Channel, EventKind, FeedEvent, InFlight, Link, Metrics, Packet, RadioMode, RescueTeam, ScenarioKey, SimNode, Snapshot, VoiceJobView } from './types';
 import { buildTerrain, distance, linkCost, LINK_THRESHOLD_DB, METERS_PER_UNIT, snrForLink } from './terrain';
-import { clampWorld, createScenario } from './scenarios';
+import { clampWorld, createScenario, createTeams } from './scenarios';
 
 const MAX_EVENTS = 120;
 const MAX_PACKETS = 320;
@@ -19,6 +19,8 @@ export class MeshEngine {
   showRelay = true;
   radio: RadioMode = 'lora';
   positionEnabled = true;
+  teams: RescueTeam[] = [];
+  lastSos: { x: number; y: number; nodeName: string } | null = null;
   private beidouAckCount = 0;
   private beidouJobs: { sosId: string; nodeId: string; deliverAt: number; ackAt: number; delivered: boolean; acked: boolean }[] = [];
   private offlineQueue = new Map<string, Packet[]>();
@@ -66,6 +68,8 @@ export class MeshEngine {
     this.beidouJobs = [];
     this.beidouAckCount = 0;
     this.offlineQueue = new Map();
+    this.teams = createTeams(scenario);
+    this.lastSos = null;
     this.tally = { sent: 0, delivered: 0, hops: 0, latency: 0, received: 0 };
     for (const node of this.nodes) {
       this.seen.set(node.id, new Set());
@@ -131,6 +135,7 @@ export class MeshEngine {
     const step = Math.min(Math.max(dt, 0), 0.1);
     this.clock += step;
     this.moveNodes(step);
+    this.moveTeams(step);
     this.linkTimer += step;
     if (this.linkTimer >= 0.5) {
       this.linkTimer = 0;
@@ -368,6 +373,7 @@ export class MeshEngine {
   sendSOS(nodeId: string): void {
     const node = this.node(nodeId);
     if (!node || !node.online) return;
+    this.lastSos = { x: node.x, y: node.y, nodeName: node.name };
     const sosId = `s${this.seq}`;
     this.pushSosPacket(node, sosId, 1);
     this.sosJobs.push({ sosId, nodeId, attempts: 1, nextAt: this.clock + 5, acked: false });
@@ -524,6 +530,55 @@ export class MeshEngine {
     this.log('ack', `近场实时语音接通：${names}${near.length > 3 ? ' 等' : ''} · ${near.length} 个节点（BLE/WiFi 直连，不走 Mesh）`);
   }
 
+  dispatchTeam(teamId: string): void {
+    const team = this.teams.find((t) => t.id === teamId);
+    if (!team) return;
+    if (!this.lastSos) {
+      this.log('warn', '暂无 SOS 目标，先让现场节点发出求救');
+      return;
+    }
+    team.status = 'moving';
+    team.targetX = this.lastSos.x;
+    team.targetY = this.lastSos.y;
+    team.targetName = this.lastSos.nodeName;
+    this.log('info', `${team.name}（${team.members} 人）出动，前往 ${this.lastSos.nodeName} 的求救点`);
+  }
+
+  recallTeam(teamId: string): void {
+    const team = this.teams.find((t) => t.id === teamId);
+    if (!team) return;
+    team.status = 'moving';
+    team.targetX = team.baseX;
+    team.targetY = team.baseY;
+    team.targetName = undefined;
+    this.log('info', `${team.name} 返回待命点`);
+  }
+
+  private moveTeams(dt: number): void {
+    for (const team of this.teams) {
+      if (team.status !== 'moving' || team.targetX === undefined || team.targetY === undefined) continue;
+      const dx = team.targetX - team.x;
+      const dy = team.targetY - team.y;
+      const dist = Math.hypot(dx, dy);
+      const step = 28 * dt;
+      if (dist <= step + 1) {
+        team.x = team.targetX;
+        team.y = team.targetY;
+        if (team.targetName) {
+          this.log('deliver', `${team.name} 抵达 ${team.targetName} 的求救点，开始处置`);
+          team.status = 'onsite';
+        } else {
+          this.log('info', `${team.name} 已返回待命点`);
+          team.status = 'standby';
+        }
+        team.targetName = undefined;
+        continue;
+      }
+      team.x += (dx / dist) * step;
+      team.y += (dy / dist) * step;
+    }
+  }
+
   private flushOfflineQueue(): void {
     for (const [nodeId, packets] of [...this.offlineQueue.entries()]) {
       const node = this.node(nodeId);
@@ -625,6 +680,8 @@ export class MeshEngine {
       queued: this.queuedCount(),
       beidouAcks: this.beidouAckCount,
       beidouPending: this.beidouJobs.filter((j) => !j.acked).length,
+      teams: this.teams.map((team) => ({ ...team })),
+      lastSos: this.lastSos,
     };
   }
 }
