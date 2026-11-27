@@ -1,5 +1,9 @@
 export type Role = 'phone' | 'relay' | 'drone' | 'car' | 'command';
 
+export type RadioMode = 'lora' | 'halow' | 'ble';
+
+export type Channel = 'public' | 'team';
+
 export type MsgType = 'SOS' | 'TEXT' | 'POS' | 'VOICE_CHUNK' | 'ACK';
 
 export type ScenarioKey = 'urban' | 'mountain' | 'disaster';
@@ -49,6 +53,8 @@ export interface Packet {
   chunkTotal?: number;
   voiceId?: string;
   sosId?: string;
+  channel?: Channel;
+  via?: 'mesh' | 'beidou';
   delivered: boolean;
   deliveredAt?: number;
   acked?: boolean;
@@ -104,4 +110,8 @@ export interface Snapshot {
   ackCount: number;
   showRelay: boolean;
   voices: VoiceJobView[];
+  radio: RadioMode;
+  positionEnabled: boolean;
+  queued: number;
+  beidouAcks: number;
 }

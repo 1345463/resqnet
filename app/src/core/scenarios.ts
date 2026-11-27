@@ -80,6 +80,7 @@ export function createScenario(key: ScenarioKey): Scenario {
       makeNode(rng, 'car', '救援车-02', 720, 300, true),
     ];
     nodes.push(...phoneRing(rng, '居民', 520, 380, 250, 26));
+    nodes.push(...phoneRing(rng, '近场', 520, 380, 10, 4));
     return { key, terrain, nodes };
   }
 
@@ -98,6 +99,7 @@ export function createScenario(key: ScenarioKey): Scenario {
       const y = 560 - t * 340 + (rng() - 0.5) * 80;
       nodes.push(makeNode(rng, 'phone', `队员-${String(i + 1).padStart(2, '0')}`, x, y, true));
     }
+    nodes.push(...phoneRing(rng, '近场', 240, 540, 10, 4));
     return { key, terrain, nodes };
   }
 
@@ -114,6 +116,7 @@ export function createScenario(key: ScenarioKey): Scenario {
   nodes.push(...phoneRing(rng, '居民', 260, 220, 120, 16));
   nodes.push(...phoneRing(rng, '居民', 720, 240, 130, 16));
   nodes.push(...phoneRing(rng, '居民', 480, 570, 120, 15));
+  nodes.push(...phoneRing(rng, '近场', 480, 570, 10, 4));
   return { key, terrain, nodes };
 }
 

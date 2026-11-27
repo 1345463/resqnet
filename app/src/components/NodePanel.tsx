@@ -5,6 +5,7 @@ interface RelayInfo {
   name: string;
   snr: number;
   score: number;
+  parts: { snrNorm: number; cost: number; altNorm: number; battery: number; load: number };
 }
 
 interface Props {
@@ -37,6 +38,16 @@ export function NodePanel({ nodes, selectedId, relay, onSelect, onToggle }: Prop
           <span className={`muted ${relay.snr < 0 ? 'snr-weak' : ''}`}>
             链路 {relay.snr.toFixed(1)} dB{relay.snr < 0 ? '（临界）' : ''} · 综合评分 {(relay.score * 100).toFixed(0)}
           </span>
+          <details className="relay-detail">
+            <summary>评分明细</summary>
+            <ul>
+              <li>链路 35% × {(relay.parts.snrNorm * 100).toFixed(0)}</li>
+              <li>代价 25% × {(relay.parts.cost * 100).toFixed(0)}</li>
+              <li>高度 15% × {(relay.parts.altNorm * 100).toFixed(0)}</li>
+              <li>电量 15% × {(relay.parts.battery * 100).toFixed(0)}</li>
+              <li>负载 10% × {((1 - relay.parts.load) * 100).toFixed(0)}</li>
+            </ul>
+          </details>
         </div>
       )}
       <ul className="node-list">

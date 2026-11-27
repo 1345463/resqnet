@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import type { SimNode } from '../core/types';
+import type { Channel, SimNode } from '../core/types';
 
 interface Props {
   node: SimNode | null;
+  channel: Channel;
+  onChannel: (channel: Channel) => void;
   onSendText: (text: string) => void;
   onSendSOS: () => void;
   onSendVoice: (url: string, duration: number) => void;
+  onBeidou: () => void;
+  onNearfield: () => void;
 }
 
 function writeString(view: DataView, offset: number, value: string): void {
@@ -39,7 +43,7 @@ function makeBeep(seconds = 2.4): string {
   return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
 }
 
-export function Composer({ node, onSendText, onSendSOS, onSendVoice }: Props) {
+export function Composer({ node, channel, onChannel, onSendText, onSendSOS, onSendVoice, onBeidou, onNearfield }: Props) {
   const [text, setText] = useState('');
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -97,6 +101,18 @@ export function Composer({ node, onSendText, onSendSOS, onSendVoice }: Props) {
         </span>
         <button type="button" className="sos-btn" disabled={!node} onClick={onSendSOS}>
           SOS 求救
+        </button>
+      </div>
+      <div className="composer-row">
+        <select value={channel} onChange={(e) => onChannel(e.target.value as Channel)} disabled={!node}>
+          <option value="public">公共频道</option>
+          <option value="team">队伍频道（E2EE）</option>
+        </select>
+        <button type="button" className="ghost" disabled={!node} onClick={onBeidou}>
+          北斗求救
+        </button>
+        <button type="button" className="ghost" disabled={!node} onClick={onNearfield}>
+          近场语音
         </button>
       </div>
       <div className="composer-row">

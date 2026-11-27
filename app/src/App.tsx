@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSimulation } from './hooks/useSimulation';
 import { MapCanvas } from './components/MapCanvas';
 import { NodePanel } from './components/NodePanel';
@@ -6,7 +7,7 @@ import { Composer } from './components/Composer';
 import { MetricsBar } from './components/MetricsBar';
 import { VoiceProgress } from './components/VoiceProgress';
 import { ScenarioBar } from './components/ScenarioBar';
-import type { ScenarioKey } from './core/types';
+import type { Channel, ScenarioKey } from './core/types';
 
 const SCENARIO_LABEL: Record<ScenarioKey, string> = {
   urban: '城区搜救',
@@ -16,6 +17,8 @@ const SCENARIO_LABEL: Record<ScenarioKey, string> = {
 
 export default function App() {
   const { engine, snap, actions } = useSimulation();
+  const [channel, setChannel] = useState<Channel>('public');
+  const [emergency, setEmergency] = useState({ on: false, callsign: '', report: '' });
   const selected = snap.nodes.find((node) => node.id === snap.selectedId) ?? null;
   const relay = selected ? engine.relayFor(selected.id) : null;
 
@@ -48,15 +51,49 @@ export default function App() {
         </div>
       </header>
 
+      {emergency.on && (
+        <div className="emergency-banner">
+          应急临时设台 · 呼号 {emergency.callsign || '未填'} · 报备 {emergency.report || '未填'} · 条例第 37 条：须及时向属地无管机构报告，事后关闭
+        </div>
+      )}
+
       <main className="layout">
         <aside className="col-left">
           <ScenarioBar
             scenario={snap.scenario}
             showRelay={snap.showRelay}
+            radio={snap.radio}
+            positionEnabled={snap.positionEnabled}
             onScenario={actions.setScenario}
             onToggleRelay={actions.toggleRelay}
+            onRadio={actions.setRadio}
+            onPosition={actions.setPosition}
             onReset={() => actions.setScenario(snap.scenario)}
           />
+          <section className="panel emergency-panel">
+            <label className="switch-row">
+              <input
+                type="checkbox"
+                checked={emergency.on}
+                onChange={(e) => setEmergency((prev) => ({ ...prev, on: e.target.checked }))}
+              />
+              <span>应急模式（条例第 37 条）</span>
+            </label>
+            {emergency.on && (
+              <div className="form-grid compact">
+                <input
+                  value={emergency.callsign}
+                  placeholder="呼号"
+                  onChange={(e) => setEmergency((prev) => ({ ...prev, callsign: e.target.value }))}
+                />
+                <input
+                  value={emergency.report}
+                  placeholder="报备编号"
+                  onChange={(e) => setEmergency((prev) => ({ ...prev, report: e.target.value }))}
+                />
+              </div>
+            )}
+          </section>
           <NodePanel
             nodes={snap.nodes}
             selectedId={snap.selectedId}
@@ -80,9 +117,13 @@ export default function App() {
           </div>
           <Composer
             node={selected}
+            channel={channel}
+            onChannel={setChannel}
             onSendSOS={() => selected && actions.sendSOS(selected.id)}
-            onSendText={(text) => selected && actions.sendText(selected.id, text)}
-            onSendVoice={(url, duration) => selected && actions.sendVoice(selected.id, url, duration)}
+            onSendText={(text) => selected && actions.sendText(selected.id, text, channel)}
+            onSendVoice={(url, duration) => selected && actions.sendVoice(selected.id, url, duration, channel)}
+            onBeidou={() => selected && actions.sendBeidou(selected.id)}
+            onNearfield={() => selected && actions.nearfield(selected.id)}
           />
         </section>
 
@@ -100,7 +141,26 @@ export default function App() {
               <li>点 <b>SOS 求救</b>，看红色数据包如何多跳到达指挥车</li>
               <li>在节点上点「断开」，观察网络绕行与主中继切换</li>
               <li>发一条文字或语音，右侧日志会显示跳数与时延</li>
+              <li>切「BLE」再选「近场-01」发消息：节点无外链会进入离线队列；切回 LoRa 自动补发</li>
+              <li>点「北斗求救」：不依赖 Mesh，约 9 秒后收到卫星回执</li>
             </ol>
+            <details className="feature-list">
+              <summary>演示端覆盖的功能</summary>
+              <ul>
+                <li>三种演练场景与地形遮挡</li>
+                <li>链路模式：LoRa / Wi-Fi HaLow / BLE 近场（范围与带宽随模式变化）</li>
+                <li>SOS 多跳、指挥车回执、无回执自动重发</li>
+                <li>主中继选举与评分明细（链路/代价/高度/电量/负载）</li>
+                <li>公共频道 / 队伍加密频道（E2EE 标记）</li>
+                <li>文字与语音消息分片、去重、TTL、优先级</li>
+                <li>位置回传开关（省电模式）与轨迹</li>
+                <li>离线队列与链路恢复补发</li>
+                <li>北斗三号短报文卫星求援与回执</li>
+                <li>近场实时语音（BLE/WiFi 直连，不走 Mesh）</li>
+                <li>应急模式：条例第 37 条临时设台登记</li>
+              </ul>
+            </details>
+            <p className="demo-status">链路 {snap.radio === 'halow' ? 'Wi-Fi HaLow' : snap.radio === 'ble' ? 'BLE 近场' : 'LoRa 433MHz'} · 离线队列 {snap.queued} 条 · 北斗回执 {snap.beidouAcks}</p>
             <p className="muted">
               本页运行协议仿真：邻居发现、链路度量、中继选举、广播抑制、分片与去重均为真实计算；真实射频链路见作品帖硬件视频。
             </p>

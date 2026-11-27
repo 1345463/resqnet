@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MeshEngine } from '../core/engine';
-import type { ScenarioKey } from '../core/types';
+import type { Channel, RadioMode, ScenarioKey } from '../core/types';
 
 export function useSimulation() {
   const engineRef = useRef<MeshEngine | null>(null);
@@ -67,16 +67,32 @@ export function useSimulation() {
         engine.toggleShowRelay();
         setSnap(engine.getSnapshot());
       },
-      sendText: (id: string, text: string) => {
-        engine.sendText(id, text);
+      sendText: (id: string, text: string, channel?: Channel) => {
+        engine.sendText(id, text, channel);
         setSnap(engine.getSnapshot());
       },
       sendSOS: (id: string) => {
         engine.sendSOS(id);
         setSnap(engine.getSnapshot());
       },
-      sendVoice: (id: string, url: string, duration: number) => {
-        engine.sendVoice(id, url, duration);
+      sendVoice: (id: string, url: string, duration: number, channel?: Channel) => {
+        engine.sendVoice(id, url, duration, channel);
+        setSnap(engine.getSnapshot());
+      },
+      sendBeidou: (id: string) => {
+        engine.sendBeidouSOS(id);
+        setSnap(engine.getSnapshot());
+      },
+      nearfield: (id: string) => {
+        engine.nearfieldCall(id);
+        setSnap(engine.getSnapshot());
+      },
+      setRadio: (radio: RadioMode) => {
+        engine.setRadio(radio);
+        setSnap(engine.getSnapshot());
+      },
+      setPosition: (enabled: boolean) => {
+        engine.setPositionEnabled(enabled);
         setSnap(engine.getSnapshot());
       },
     }),
