@@ -114,4 +114,5 @@ export interface Snapshot {
   positionEnabled: boolean;
   queued: number;
   beidouAcks: number;
+  beidouPending: number;
 }

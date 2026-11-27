@@ -624,6 +624,7 @@ export class MeshEngine {
       positionEnabled: this.positionEnabled,
       queued: this.queuedCount(),
       beidouAcks: this.beidouAckCount,
+      beidouPending: this.beidouJobs.filter((j) => !j.acked).length,
     };
   }
 }

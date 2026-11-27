@@ -10,6 +10,8 @@ interface Props {
   onSendVoice: (url: string, duration: number) => void;
   onBeidou: () => void;
   onNearfield: () => void;
+  beidouPending: number;
+  beidouAcks: number;
 }
 
 function writeString(view: DataView, offset: number, value: string): void {
@@ -43,7 +45,7 @@ function makeBeep(seconds = 2.4): string {
   return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
 }
 
-export function Composer({ node, channel, onChannel, onSendText, onSendSOS, onSendVoice, onBeidou, onNearfield }: Props) {
+export function Composer({ node, channel, onChannel, onSendText, onSendSOS, onSendVoice, onBeidou, onNearfield, beidouPending, beidouAcks }: Props) {
   const [text, setText] = useState('');
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -108,13 +110,40 @@ export function Composer({ node, channel, onChannel, onSendText, onSendSOS, onSe
           <option value="public">公共频道</option>
           <option value="team">队伍频道（E2EE）</option>
         </select>
-        <button type="button" className="ghost" disabled={!node} onClick={onBeidou}>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => {
+            if (!node) {
+              setHint('请先在左侧或地图上选择节点');
+              return;
+            }
+            setHint('');
+            onBeidou();
+          }}
+        >
           北斗求救
         </button>
-        <button type="button" className="ghost" disabled={!node} onClick={onNearfield}>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => {
+            if (!node) {
+              setHint('请先在左侧或地图上选择节点');
+              return;
+            }
+            setHint('');
+            onNearfield();
+          }}
+        >
           近场语音
         </button>
       </div>
+      {(beidouPending > 0 || beidouAcks > 0) && (
+        <p className="beidou-status">
+          北斗：{beidouPending} 条待回执 · 已回执 {beidouAcks}
+        </p>
+      )}
       <div className="composer-row">
         <input
           value={text}

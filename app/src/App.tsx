@@ -124,6 +124,8 @@ export default function App() {
             onSendVoice={(url, duration) => selected && actions.sendVoice(selected.id, url, duration, channel)}
             onBeidou={() => selected && actions.sendBeidou(selected.id)}
             onNearfield={() => selected && actions.nearfield(selected.id)}
+            beidouPending={snap.beidouPending}
+            beidouAcks={snap.beidouAcks}
           />
         </section>
 

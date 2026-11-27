@@ -695,6 +695,12 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.beidou-status {
+  margin: 0;
+  font-size: 11.5px;
+  color: #fde68a;
+}
+
 .feature-list {
   margin-top: 8px;
   font-size: 11px;
