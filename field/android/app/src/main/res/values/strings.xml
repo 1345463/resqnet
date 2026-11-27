@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ResQNet 现场端</string>
+    <string name="title_activity_main">ResQNet 现场端</string>
+    <string name="package_name">com.resqnet.field</string>
+    <string name="custom_url_scheme">com.resqnet.field</string>
+</resources>

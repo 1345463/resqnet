@@ -117,7 +117,9 @@ static void processPending() {
 
 static void notifyBle(const String& frame) {
   if (!bleConnected || bleTx == nullptr) return;
-  bleTx->setValue(std::string(frame.c_str()));
+  String line = frame;
+  line += '\n';
+  bleTx->setValue(std::string(line.c_str()));
   bleTx->notify();
 }
 

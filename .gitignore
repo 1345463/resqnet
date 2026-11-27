@@ -15,3 +15,9 @@ Thumbs.db
 .qoder/
 shots/
 coverage/
+field/android/.gradle/
+field/android/.idea/
+field/android/build/
+field/android/app/build/
+field/android/local.properties
+field/android/capacitor-cordova-android-plugins/build/

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 import { FieldMap } from './components/FieldMap';
 import { useBle } from './core/ble';
 import type { FieldMessage, LinkState, Peer, SelfPosition } from './core/types';
@@ -99,6 +101,36 @@ export default function App() {
   const ble = useBle(handleLine, onState);
 
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      let watchId: string | undefined;
+      let cancelled = false;
+      void (async () => {
+        try {
+          await Geolocation.requestPermissions();
+          watchId = await Geolocation.watchPosition({ enableHighAccuracy: true }, (position, error) => {
+            if (cancelled) return;
+            if (position) {
+              setSelf({
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                updatedAt: Date.now(),
+              });
+              setLocated(true);
+              setGeoError('');
+            } else if (error) {
+              setGeoError('定位失败，使用示例位置');
+            }
+          });
+        } catch {
+          setGeoError('定位权限未开启，使用示例位置');
+        }
+      })();
+      return () => {
+        cancelled = true;
+        if (watchId) void Geolocation.clearWatch({ id: watchId });
+      };
+    }
     if (!navigator.geolocation) {
       setGeoError('设备不支持定位，使用示例位置');
       return;
@@ -269,6 +301,11 @@ export default function App() {
           <span className="field-pos">
             {located ? `定位 ±${Math.round(self.accuracy)} m` : '示例位置'} · {self.lat.toFixed(4)}, {self.lon.toFixed(4)}
           </span>
+          {!Capacitor.isNativePlatform() && (
+            <a className="apk-link" href="/download/ResQNet-field.apk">
+              下载 Android App（APK）
+            </a>
+          )}
         </section>
 
         <section className="field-log">

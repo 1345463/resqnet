@@ -6,6 +6,7 @@
 > 在线演示：https://resqnet-t2bci1hjbry.qoder.zone
 > 管理端（真实台账/事件/网关）：https://resqnet-console-t2bci1hjbry.qoder.zone
 > 现场端（手机 PWA）：https://resqnet-field-t2bci1hjbry.qoder.zone
+> 现场端 Android APK：https://resqnet-field-t2bci1hjbry.qoder.zone/download/ResQNet-field.apk
 > 电脑端：`release/ResQNet/ResQNet.exe`（免安装，支持 USB LoRa 串口）
 > 当前版本：**v0.1.0**（协议仿真 + 指挥台）
 
@@ -81,6 +82,7 @@ docs/                 可行性论证、协议规范、无线电方案、迭代�
 - 固件说明：[firmware/gateway/README.md](firmware/gateway/README.md)（ESP32-S3 + SX1262，433 MHz 小功率）
 - 电脑端直连：烧 `firmware/usb-bridge`，用 `release/ResQNet/ResQNet.exe` 走 USB 串口（见 [desktop/README.md](desktop/README.md)）
 - 手机现场端：Android Chrome 打开 `https://resqnet-field-t2bci1hjbry.qoder.zone`，可连 ESP32 网关 BLE；无硬件用"演示模式"
+- Android APK：`https://resqnet-field-t2bci1hjbry.qoder.zone/download/ResQNet-field.apk`（原生 BLE + 定位，debug 签名）
 - 管理端连网关：设置 → `ws://<网关IP>:81/`
 - 无硬件联调：`node tools/gw-sim/server.mjs`，管理端连 `ws://127.0.0.1:8081/`
 - 公网 HTTPS 版管理端无法连接局域网 `ws://`（浏览器混合内容限制），现场请用本地管理端
